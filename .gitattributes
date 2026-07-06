@@ -1,0 +1,22 @@
+* text=auto
+
+# Stable text line endings across the two Windows devices
+*.md text eol=lf
+*.pas text eol=crlf
+*.PrjPcb text eol=crlf
+*.PrjScr text eol=crlf
+*.LibPkg text eol=crlf
+
+# Altium and reference documents are binary and must not be line-merged
+*.SchDoc binary
+*.PcbDoc binary
+*.SchLib binary
+*.SCHLIB binary
+*.PcbLib binary
+*.IntLib binary
+*.silib binary
+*.pdf binary
+*.doc binary
+*.docx binary
+*.zip binary
+*.Zip binary

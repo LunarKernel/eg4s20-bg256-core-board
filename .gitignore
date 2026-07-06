@@ -1,0 +1,69 @@
+# Local agent/editor state
+.agents/
+.codex/
+.vs/
+.vscode/
+.idea/
+
+# OS and IDE user settings
+.DS_Store
+Thumbs.db
+Desktop.ini
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+*.wsuo
+*.sqlite
+*.DsnWrk
+*.PrjPcbStructure
+
+# Altium generated output, history, previews and locks
+**/History/
+**/__Previews/
+**/Project Logs for */
+**/Project Outputs for */
+*.SchDocPreview
+*.PcbDocPreview
+*.Lck
+*.lck
+*.Lock
+*.REP
+*.DRC
+*.ERC
+*.PcbDoc.htm
+*.SchDoc.htm
+
+# Unreferenced scratch documents created during Altium automation
+/AltiumProject/v.SchDoc
+/AltiumProject/EG4S20_SummerProject/v.PcbDoc
+
+# Extracted duplicate of the supplied IntLib; CompatLibrary is the project copy
+/ANLOGIC开发板封装库/
+
+# Generic build/cache/temp/log files
+/tmp/
+**/tmp/
+**/temp/
+**/cache/
+*.tmp
+*.temp
+*.bak
+*.old
+*.log
+*.dmp
+*.stackdump
+~$*
+
+# Secrets and machine-local environment
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.pfx
+*.p12
+secrets.*
+credentials.*
+*_token.txt
+*_password.txt
