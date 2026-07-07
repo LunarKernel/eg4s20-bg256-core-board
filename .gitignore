@@ -43,9 +43,13 @@ Desktop.ini
 
 # Generic build/cache/temp/log files
 /tmp/
+/output/
 **/tmp/
 **/temp/
 **/cache/
+__pycache__/
+**/__pycache__/
+*.pyc
 *.tmp
 *.temp
 *.bak
