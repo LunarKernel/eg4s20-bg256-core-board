@@ -10,8 +10,8 @@
 const
     BOARD_LEFT_MM   = 71.2469873;
     BOARD_BOTTOM_MM = 59.3089873;
-    BOARD_WIDTH_MM  = 102.2;
-    BOARD_HEIGHT_MM = 71.8;
+    BOARD_WIDTH_MM  = 100.0;
+    BOARD_HEIGHT_MM = 68.0;
     PCB_PATH        = 'C:\Users\zlx\SummerProject\AltiumProject\EG4S20_SummerProject\EG4S20_CoreBoard.PcbDoc';
     LOG_PATH        = 'C:\Users\zlx\SummerProject\AltiumProject\EG4S20_SummerProject\PCB_AutoLayout_Route.log';
     AUDIT_PATH      = 'C:\Users\zlx\SummerProject\AltiumProject\EG4S20_SummerProject\PCB_Boundary_Audit.log';
@@ -149,6 +149,31 @@ begin
             Break;
         end;
         Track := Iterator.NextPCBObject;
+    end;
+
+    Board.BoardIterator_Destroy(Iterator);
+end;
+
+function FirstNetByName(Board : IPCB_Board; NetName : String) : IPCB_Net;
+var
+    Iterator : IPCB_BoardIterator;
+    Obj      : IPCB_Primitive;
+begin
+    Result := nil;
+    Iterator := Board.BoardIterator_Create;
+    Iterator.AddFilter_ObjectSet(AllPrimitives);
+    Iterator.AddFilter_LayerSet(AllLayers);
+    Iterator.AddFilter_Method(eProcessAll);
+
+    Obj := Iterator.FirstPCBObject;
+    while Obj <> nil do
+    begin
+        if (Obj.Net <> nil) and (Obj.Net.Name = NetName) then
+        begin
+            Result := Obj.Net;
+            Break;
+        end;
+        Obj := Iterator.NextPCBObject;
     end;
 
     Board.BoardIterator_Destroy(Iterator);
@@ -837,6 +862,81 @@ begin
         'mm height=' + FloatToStr(BOARD_HEIGHT_MM) + 'mm');
 end;
 
+function MovePadAtMil(Board : IPCB_Board; CenterXMil, CenterYMil, DeltaXMil, DeltaYMil : Double) : Boolean;
+var
+    Iterator  : IPCB_BoardIterator;
+    Pad       : IPCB_Pad;
+    Tolerance : TCoord;
+begin
+    Result := False;
+    Tolerance := MilsToCoord(1.0);
+
+    Iterator := Board.BoardIterator_Create;
+    Iterator.AddFilter_ObjectSet(MkSet(ePadObject));
+    Iterator.AddFilter_LayerSet(AllLayers);
+    Iterator.AddFilter_Method(eProcessAll);
+
+    Pad := Iterator.FirstPCBObject;
+    while Pad <> nil do
+    begin
+        if CoordNear(Pad.X, MilsToCoord(CenterXMil), Tolerance) and
+           CoordNear(Pad.Y, MilsToCoord(CenterYMil), Tolerance) then
+        begin
+            BeginObjModify(Pad);
+            Pad.MoveByXY(MilsToCoord(DeltaXMil), MilsToCoord(DeltaYMil));
+            EndObjModify(Pad);
+            Log('MOVED_PAD CenterMil=' + FloatToStr(CenterXMil) + ',' +
+                FloatToStr(CenterYMil) + ' DeltaMil=' + FloatToStr(DeltaXMil) +
+                ',' + FloatToStr(DeltaYMil));
+            Result := True;
+            Break;
+        end;
+        Pad := Iterator.NextPCBObject;
+    end;
+
+    Board.BoardIterator_Destroy(Iterator);
+end;
+
+function NearOriginText(R : TCoordRect) : Boolean;
+var
+    Limit : TCoord;
+begin
+    Limit := MilsToCoord(700.0);
+    Result := (Abs(R.Left) <= Limit) and
+              (Abs(R.Right) <= Limit) and
+              (Abs(R.Bottom) <= Limit) and
+              (Abs(R.Top) <= Limit);
+end;
+
+function RemoveDefaultDesignatorTextsFromBoard(Board : IPCB_Board) : Integer;
+var
+    Iterator : IPCB_BoardIterator;
+    TextObj  : IPCB_Text;
+    NextText : IPCB_Text;
+begin
+    Result := 0;
+    Iterator := Board.BoardIterator_Create;
+    Iterator.AddFilter_ObjectSet(MkSet(eTextObject));
+    Iterator.AddFilter_LayerSet(MkSet(eTopOverlay));
+    Iterator.AddFilter_Method(eProcessAll);
+
+    TextObj := Iterator.FirstPCBObject;
+    while TextObj <> nil do
+    begin
+        NextText := Iterator.NextPCBObject;
+        if (TextObj.Text = 'Designator1') and NearOriginText(TextObj.BoundingRectangle) then
+        begin
+            LogRect('REMOVED_DEFAULT_TEXT Text=' + TextObj.Text +
+                ' Object=' + TextObj.ObjectIDString, TextObj.BoundingRectangle);
+            Board.RemovePCBObject(TextObj);
+            Inc(Result);
+        end;
+        TextObj := NextText;
+    end;
+
+    Board.BoardIterator_Destroy(Iterator);
+end;
+
 procedure FixBoundaryOverruns;
 var
     Board       : IPCB_Board;
@@ -847,7 +947,16 @@ var
     NewX2       : TCoord;
     NewY2       : TCoord;
     FixedTracks : Integer;
+    FixedPrims  : Integer;
+    FixedNets   : Integer;
     Margin      : TCoord;
+    Obj         : IPCB_Primitive;
+    R           : TCoordRect;
+    ShiftX      : TCoord;
+    ShiftY      : TCoord;
+    GndNet      : IPCB_Net;
+    MovedPads   : Integer;
+    RemovedText : Integer;
 begin
     LogLines := TStringList.Create;
     try
@@ -860,9 +969,16 @@ begin
 
         Log('FixBoundaryOverruns started');
         FixedTracks := 0;
+        FixedPrims := 0;
+        FixedNets := 0;
+        MovedPads := 0;
+        RemovedText := 0;
         Margin := MMsToCoord(0.01);
+        GndNet := FirstNetByName(Board, 'GND');
         PCBServer.PreProcess;
 
+        SetCompOrigin(Board, 'J1', 81.4, 54.0, False, 90.0);
+        SetCompOrigin(Board, 'J2', 81.4, 13.0, False, 90.0);
         RedefineBoardShapeFromSelectedOutline(Board);
 
         Iterator := Board.BoardIterator_Create;
@@ -874,7 +990,7 @@ begin
         while Track <> nil do
         begin
             if (Track.Net <> nil) and (Track.Net.Name = 'GND') and
-               (Track.BoundingRectangle.Left < AbsX(0.0) - Margin) then
+               RectOutsideBoard(Track.BoundingRectangle, Margin) then
             begin
                 NewX1 := ClampXInsideBoard(Track.X1);
                 NewY1 := ClampYInsideBoard(Track.Y1);
@@ -893,13 +1009,100 @@ begin
         end;
 
         Board.BoardIterator_Destroy(Iterator);
+
+        Iterator := Board.BoardIterator_Create;
+        Iterator.AddFilter_ObjectSet(AllPrimitives);
+        Iterator.AddFilter_LayerSet(AllLayers);
+        Iterator.AddFilter_Method(eProcessAll);
+
+        Obj := Iterator.FirstPCBObject;
+        while Obj <> nil do
+        begin
+            if IsAuditedPhysicalPrimitive(Obj) and RectOutsideBoard(Obj.BoundingRectangle, Margin) then
+            begin
+                R := Obj.BoundingRectangle;
+                ShiftX := 0;
+                ShiftY := 0;
+
+                if R.Left < AbsX(0.0) + Margin then
+                    ShiftX := AbsX(0.0) + Margin - R.Left
+                else if R.Right > BoardRightCoord - Margin then
+                    ShiftX := BoardRightCoord - Margin - R.Right;
+
+                if R.Bottom < AbsY(0.0) + Margin then
+                    ShiftY := AbsY(0.0) + Margin - R.Bottom
+                else if R.Top > BoardTopCoord - Margin then
+                    ShiftY := BoardTopCoord - Margin - R.Top;
+
+                if (ShiftX <> 0) or (ShiftY <> 0) then
+                begin
+                    BeginObjModify(Obj);
+                    Obj.MoveByXY(ShiftX, ShiftY);
+                    EndObjModify(Obj);
+                    Inc(FixedPrims);
+                end;
+            end;
+            Obj := Iterator.NextPCBObject;
+        end;
+
+        Board.BoardIterator_Destroy(Iterator);
+
+        if GndNet <> nil then
+        begin
+            Iterator := Board.BoardIterator_Create;
+            Iterator.AddFilter_ObjectSet(MkSet(ePadObject, eTrackObject));
+            Iterator.AddFilter_LayerSet(AllLayers);
+            Iterator.AddFilter_Method(eProcessAll);
+
+            Obj := Iterator.FirstPCBObject;
+            while Obj <> nil do
+            begin
+                R := Obj.BoundingRectangle;
+                if (Obj.Net = nil) and
+                   (R.Right > AbsX(98.0)) and
+                   (R.Bottom > AbsY(8.0)) and
+                   (R.Top < AbsY(62.0)) then
+                begin
+                    BeginObjModify(Obj);
+                    Obj.Net := GndNet;
+                    EndObjModify(Obj);
+                    Inc(FixedNets);
+                end;
+                Obj := Iterator.NextPCBObject;
+            end;
+
+            Board.BoardIterator_Destroy(Iterator);
+        end;
+
+        if MovePadAtMil(Board, 6671.520, 2965.528, -4.0, 0.0) then
+            Inc(MovedPads);
+        if MovePadAtMil(Board, 6671.520, 4579.700, -4.0, 0.0) then
+            Inc(MovedPads);
+
+        RemovedText := RemoveDefaultDesignatorTextsFromBoard(Board);
+
         PCBServer.PostProcess;
         Board.ViewManager_FullUpdate;
         Client.SendMessage('PCB:Zoom', 'Action=Redraw', 255, Client.CurrentView);
+        ResetParameters;
+        AddStringParameter('Mode', 'BOARDOUTLINE_FROM_SEL_PRIMS');
+        RunProcess('PCB:PlaceBoardOutline');
+        Client.SendMessage('PCB:Zoom', 'Action=Redraw', 255, Client.CurrentView);
+        SaveCurrentPCB;
+
+        Log('Set J1/J2 component origins at local X=81.4mm');
         Log('Fixed GND tracks: ' + IntToStr(FixedTracks));
+        Log('Moved remaining outside primitives: ' + IntToStr(FixedPrims));
+        Log('Assigned right-edge free pads/tracks to GND: ' + IntToStr(FixedNets));
+        Log('Moved right-edge solder-mask pads: ' + IntToStr(MovedPads));
+        Log('Removed default designator texts: ' + IntToStr(RemovedText));
         LogLines.SaveToFile(LOG_PATH);
-        ShowMessage('Boundary outline prepared. Run Design > Board Shape > Define Board Shape from Selected Objects, then save. Fixed GND tracks: ' +
-            IntToStr(FixedTracks) + '. Log saved to: ' + LOG_PATH);
+        ShowMessage('100mm x 68mm board shape applied. Fixed GND tracks: ' +
+            IntToStr(FixedTracks) + ', moved remaining outside primitives: ' +
+            IntToStr(FixedPrims) + ', assigned free GND objects: ' +
+            IntToStr(FixedNets) + ', moved mask pads: ' + IntToStr(MovedPads) +
+            ', removed default texts: ' + IntToStr(RemovedText) +
+            '. Log saved to: ' + LOG_PATH);
     finally
         if LogLines <> nil then
             LogLines.Free;
@@ -965,6 +1168,51 @@ begin
         ' RightMM=' + FloatToStr(CoordToMMs(R.Right)) +
         ' BottomMM=' + FloatToStr(CoordToMMs(R.Bottom)) +
         ' TopMM=' + FloatToStr(CoordToMMs(R.Top)));
+end;
+
+procedure LogComponentChildren(Comp : IPCB_Component);
+var
+    Iterator : IPCB_GroupIterator;
+    Prim     : IPCB_Primitive;
+begin
+    Iterator := Comp.GroupIterator_Create;
+    Iterator.AddFilter_ObjectSet(AllPrimitives);
+    Iterator.AddFilter_LayerSet(AllLayers);
+
+    Prim := Iterator.FirstPCBObject;
+    while Prim <> nil do
+    begin
+        LogRect('  CHILD Primitive=' + Prim.ObjectIDString +
+            ' Layer=' + IntToStr(Prim.Layer), Prim.BoundingRectangle);
+        Prim := Iterator.NextPCBObject;
+    end;
+
+    Comp.GroupIterator_Destroy(Iterator);
+end;
+
+function ComponentHasOutsideChildren(Comp : IPCB_Component; Margin : TCoord) : Boolean;
+var
+    Iterator : IPCB_GroupIterator;
+    Prim     : IPCB_Primitive;
+begin
+    Result := False;
+    Iterator := Comp.GroupIterator_Create;
+    Iterator.AddFilter_ObjectSet(AllPrimitives);
+    Iterator.AddFilter_LayerSet(AllLayers);
+
+    Prim := Iterator.FirstPCBObject;
+    while Prim <> nil do
+    begin
+        if IsAuditedPhysicalPrimitive(Prim) and RectOutsideBoard(Prim.BoundingRectangle, Margin) then
+        begin
+            LogRect('  CHILD_OUTSIDE Primitive=' + Prim.ObjectIDString +
+                ' Layer=' + IntToStr(Prim.Layer), Prim.BoundingRectangle);
+            Result := True;
+        end;
+        Prim := Iterator.NextPCBObject;
+    end;
+
+    Comp.GroupIterator_Destroy(Iterator);
 end;
 
 procedure AuditBoundary;
@@ -1039,13 +1287,13 @@ begin
         while Comp <> nil do
         begin
             Inc(CompCount);
-            R := Comp.BoundingRectangleNoNameComment;
-            if RectOutsideBoard(R, Margin) then
+            if ComponentHasOutsideChildren(Comp, Margin) then
             begin
                 Inc(CompOutside);
                 NameText := '';
                 if Comp.Name <> nil then
                     NameText := Comp.Name.Text;
+                R := Comp.BoundingRectangleNoNameComment;
                 LogRect('COMP_OUTSIDE ' + NameText, R);
             end;
             Comp := Iterator.NextPCBObject;
