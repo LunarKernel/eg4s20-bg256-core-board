@@ -47,12 +47,14 @@ Desktop.ini
 **/tmp/
 **/temp/
 **/cache/
+**/backups/
 __pycache__/
 **/__pycache__/
 *.pyc
 *.tmp
 *.temp
 *.bak
+*.bak*
 *.old
 *.log
 *.dmp

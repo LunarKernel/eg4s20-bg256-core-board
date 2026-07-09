@@ -3,13 +3,8 @@
 ## 工程入口
 
 - `EG4S20_SummerProject.PrjPcb`
-- `01_Connectors.SchDoc`
-- `02_FPGA_Clock_Flash.SchDoc`
-- `03_USB_JTAG.SchDoc`
-- `04_UserIO.SchDoc`
-- `05_Power.SchDoc`
+- `EG4S20BG256_CoreBoard_A0_NATIVE.SchDoc`（当前主原理图）
 - `EG4S20_CoreBoard.PcbDoc`
-- `EG4S20_CoreBoard_recovery.PcbDoc`（恢复副本）
 
 ## 已录入的 FPGA 管脚映射
 
@@ -25,12 +20,25 @@
 
 ## PCB 内容
 
-- 已建立 PCB 文档和板框。
-- 已生成 EG4S20BG256 的 16×16、共 256 个顶层 BGA 焊盘及顶层丝印外框。
-- 原始 `EG4S20_CoreBoard.PcbDoc` 已纳入工程；恢复副本保留当前编辑状态。
+- 已建立 PCB 文档和 100 mm x 68 mm 板框。
+- 已关联主要封装库，当前工程可从 PCB Library Documents 中找到所需封装。
+- 已参考实物板正反面图片完成一轮器件布局。
+- 已按 5 mil 间距、5/6 mil 走线、16/12 mil 过孔规则完成一轮自动布线。
+- 自动布线后剩余的两段实际 GND 短连接已用顶层 6 mil 线补齐。
+- 过程备份已集中归档到 `backups/2026-07-09/`，不作为正式交付文件。
+
+辅助脚本：
+
+- `../PCB_AutoLayout_Route.PrjScr`
+- `../PCB_AutoLayout_Route.pas`
+
+阶段总结：
+
+- `../../docs/阶段性总结_2026-07-09_PCB布局布线.md`
 
 ## 提交前检查
 
-- 当前原理图为按参考资料拆分的结构化草稿，尚未完成全部导线、器件参数和电气规则收敛。
-- PCB 尚未完成器件布局、网络同步、布线、铺铜和 DRC。
-- 打开工程后应检查缺失的封装/模型警告，并按实物板尺寸校正板框。
+- 当前 PCB 已完成一轮布局布线，但尚未完成正式出板前 DRC。
+- 出板前必须运行 `Tools > Design Rule Check`，重点确认间距、短路、未连接、孔径、板框外对象、丝印重叠。
+- 建议继续完成 GND Polygon Pour，再重新 repour 和 DRC。
+- USB_D+ / USB_D- 当前未按严格差分阻抗/等长规则优化；若课程要求接近可制造产品，需要单独人工检查。

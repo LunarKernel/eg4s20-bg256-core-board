@@ -1,0 +1,6 @@
+[Design]
+Version=1.0
+StartupProcedure=PCB_AutoLayout_Route.ApplyReferencePlacement
+
+[Document1]
+DocumentPath=PCB_AutoLayout_Route.pas
