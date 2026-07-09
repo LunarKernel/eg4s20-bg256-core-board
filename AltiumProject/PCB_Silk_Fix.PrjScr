@@ -1,0 +1,7 @@
+[Design]
+Version=1.0
+StartupProcedure=PCB_Silk_Fix.FixSilkDRC
+
+[Document1]
+DocumentPath=PCB_Silk_Fix.pas
+

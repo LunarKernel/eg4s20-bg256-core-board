@@ -1,0 +1,7 @@
+[Design]
+Version=1.0
+StartupProcedure=PCB_Text_Audit.AuditOverlayTexts
+
+[Document1]
+DocumentPath=PCB_Text_Audit.pas
+

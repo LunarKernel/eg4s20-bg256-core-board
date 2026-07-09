@@ -1,0 +1,7 @@
+[Design]
+Version=1.0
+StartupProcedure=PCB_SolderMaskRule_Fix.FixSolderMaskSliverRule
+
+[Document1]
+DocumentPath=PCB_SolderMaskRule_Fix.pas
+

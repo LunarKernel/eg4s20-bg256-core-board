@@ -1,0 +1,6 @@
+[Design]
+Version=1.0
+StartupProcedure=PCB_Connectivity_Fix.FixConnectivityDRC
+
+[Document1]
+DocumentPath=PCB_Connectivity_Fix.pas
