@@ -117,22 +117,22 @@ Deleting `U?` directly from the PCB would discard the Part 4 net assignment and 
 | Project validation or ERC | Record the complete-project result | 35 errors and 37 warnings, mainly existing single-pin-net issues |
 | ECO synchronization | Component, pin, and net changes completed | Passed; the second comparison had no Component, Pin, or Net changes |
 | Nonfunctional ECO proposals | Keep this repair narrowly scoped | One automatic component-class removal and ten automatic supply-rule additions were not executed |
-| DRC | Actual result for the reconstructed PCB | 2,630 active violations and 10 documented waivers; see the category breakdown below |
+| DRC | Actual result for the reconstructed PCB | 2,628 active violations and 12 documented waivers; see the category breakdown below |
 | Project portability | Opens from the final path without missing files or libraries | Passed; every project document and the integrated library loaded |
 
-The complete DRC was run in Altium Designer 25.8.1 with the stop limit raised to 10,000 so that the default 500-violation limit did not truncate the result. The pre-debug result was 2,640 violations. Comparison with the front and rear photographs in the course document showed that P2/P5 are populated front-side connectors while P3/P6 are corresponding unpopulated rear-side alternate solder footprints. Removing or moving either set would reduce fidelity to the physical board. The layout and global rules were therefore left unchanged, and only the ten confirmed overlaps between these four designators were waived with a recorded reason.
+The complete DRC was run in Altium Designer 25.8.1 with the stop limit raised to 10,000 so that the default 500-violation limit did not truncate the result. The pre-debug result was 2,640 violations. Comparison with the front and rear photographs in the course document showed that P2/P5 are populated front-side connectors while P3/P6 are corresponding unpopulated rear-side alternate solder footprints. Removing or moving either set would reduce fidelity to the physical board. The layout and global rules were therefore left unchanged, and only the twelve confirmed overlaps between these four designators were waived with a recorded reason.
 
-The post-debug result is 2,630 active violations and 10 documented waivers:
+The post-debug result is 2,628 active violations and 12 documented waivers:
 
 - Clearance: 0 active and 4 waived;
 - Short-Circuit: 0 active and 6 waived;
 - Un-Routed Net: 557;
-- Hole To Hole Clearance: 2;
+- Hole To Hole Clearance: 0 active and 2 waived;
 - Minimum Solder Mask Sliver: 227;
 - Silk To Solder Mask: 1,442;
 - Silk To Silk: 402.
 
-The waiver reason is stored in the PCB file, survives a complete DRC rerun, and remains visible in the generated report under Waived Violations. The two P2/P3 mounting-hole Hole To Hole Clearance findings remain active rather than being hidden by weakening the global hole-clearance rule. The reconstructed PCB still requires routing, silkscreen, and manufacturing-clearance cleanup and is not a DRC-clean production release.
+The waiver reason is stored in the PCB file, survives a complete DRC rerun, and remains visible in the generated report under Waived Violations. All twelve known connector-overlap findings use exact waivers; no global rule was weakened. The reconstructed PCB still requires routing, silkscreen, and manufacturing-clearance cleanup and is not a DRC-clean production release.
 
 ## 6. Repository Layout
 
