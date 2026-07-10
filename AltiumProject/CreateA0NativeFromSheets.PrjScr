@@ -1,6 +1,0 @@
-[Design]
-Version=1.0
-StartupProcedure=CreateA0NativeFromSheets.CreateA0NativeFromSheets
-
-[Document1]
-DocumentPath=CreateA0NativeFromSheets.pas

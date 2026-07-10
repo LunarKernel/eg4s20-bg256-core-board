@@ -1,9 +1,0 @@
-[Design]
-Version=1.0
-StartupProcedure=PCB_100x68_Cleanup.Cleanup100x68DRC
-
-[Document1]
-DocumentPath=PCB_100x68_Cleanup.pas
-
-[Generic_ScriptingSystem]
-StartProcName=PCB_100x68_Cleanup.pas>Cleanup100x68DRC

@@ -1,9 +1,0 @@
-[Design]
-Version=1.0
-StartupProcedure=PCB_AutoLayout_Route.FixBoundaryOverruns
-
-[Document1]
-DocumentPath=PCB_AutoLayout_Route.pas
-
-[Generic_ScriptingSystem]
-StartProcName=PCB_AutoLayout_Route.pas>FixBoundaryOverruns
