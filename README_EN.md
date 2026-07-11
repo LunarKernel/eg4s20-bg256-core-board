@@ -57,7 +57,7 @@ The final baseline is the project rebuilt from the physical-board photographs:
 
 Static analysis before repair found 244 PCB components: 148 on the top side and 96 on the bottom side. The PCB data also contained 316 nets, 1,411 pads, 4,943 tracks, and 13 vias.
 
-After ECO and the final save, static analysis found 243 components: 147 on the top side and 96 on the bottom side. The current data contains 316 nets, 1,155 pads, 4,953 tracks, 13 vias, and 557 connection records; the latest DRC reports 550 unrouted connections. The reduction of 256 pads exactly matches the removed second FBGA256 footprint.
+After ECO and the final save, static analysis found 243 components: 147 on the top side and 96 on the bottom side. The current data contains 316 nets, 1,155 pads, 4,978 tracks, 13 vias, and 557 connection records; the latest DRC reports 547 unrouted connections. The reduction of 256 pads exactly matches the removed second FBGA256 footprint.
 
 ## 3. Functional Blocks
 
@@ -117,18 +117,18 @@ Deleting `U?` directly from the PCB would discard the Part 4 net assignment and 
 | Project validation or ERC | Record the complete-project result | 35 errors and 37 warnings, mainly existing single-pin-net issues |
 | ECO synchronization | Component, pin, and net changes completed | Passed; the second comparison had no Component, Pin, or Net changes |
 | Nonfunctional ECO proposals | Keep this repair narrowly scoped | One automatic component-class removal and ten automatic supply-rule additions were not executed |
-| DRC | Actual result for the reconstructed PCB | 2,621 active violations and 12 documented waivers; see the category breakdown below |
+| DRC | Actual result for the reconstructed PCB | 2,618 active violations and 12 documented waivers; see the category breakdown below |
 | Project portability | Opens from the final path without missing files or libraries | Passed; every project document and the integrated library loaded |
 
 The complete DRC was run in Altium Designer 25.8.1 with the stop limit raised to 10,000 so that the default 500-violation limit did not truncate the result. The pre-debug result was 2,640 violations. Comparison with the front and rear photographs in the course document showed that P2/P5 are populated front-side connectors while P3/P6 are corresponding unpopulated rear-side alternate solder footprints. Removing or moving either set would reduce fidelity to the physical board. The layout and global rules were therefore left unchanged, and only the twelve confirmed overlaps between these four designators were waived with a recorded reason.
 
-Without moving any component, seven endpoints confirmed by net name and pad identity were routed: the local and U7-P13 sections of DONE, the three local sections and U7-T2 section of PROGRAM B, and INIT B to U7-R3. A complete DRC was rerun after every change, with no new Clearance, Short-Circuit, or Hole To Hole violations.
+Without moving any component, ten connections confirmed by net name and pad identity were routed: the local and U7-P13 sections of DONE, the three local sections and U7-T2 section of PROGRAM B, INIT B to U7-R3, and the MSEL0, MSEL1, and FGPA GCLK1 FPGA-configuration connections. A complete DRC was rerun after every change, with no new Clearance, Short-Circuit, or Hole To Hole violations.
 
-The current result is 2,621 active violations and 12 documented waivers:
+The current result is 2,618 active violations and 12 documented waivers:
 
 - Clearance: 0 active and 4 waived;
 - Short-Circuit: 0 active and 6 waived;
-- Un-Routed Net: 550;
+- Un-Routed Net: 547;
 - Hole To Hole Clearance: 0 active and 2 waived;
 - Minimum Solder Mask Sliver: 227;
 - Silk To Solder Mask: 1,442;
