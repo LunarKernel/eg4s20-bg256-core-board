@@ -34,11 +34,7 @@ Desktop.ini
 *.PcbDoc.htm
 *.SchDoc.htm
 
-# Unreferenced scratch documents created during Altium automation
-/AltiumProject/v.SchDoc
-/AltiumProject/EG4S20_SummerProject/v.PcbDoc
-
-# Extracted duplicate of the supplied IntLib; CompatLibrary is the project copy
+# Extracted duplicate of the supplied IntLib
 /ANLOGIC开发板封装库/
 
 # Generic build/cache/temp/log files

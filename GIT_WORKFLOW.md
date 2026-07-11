@@ -32,10 +32,10 @@ git push
 
 ## 分支
 
-个人接力开发直接使用 `main` 即可。只有需要保留实验性修改时才创建短期分支：
+共享工程或最终交付修改使用短期分支，验证后再合并到 `main`：
 
 ```powershell
-git switch -c experiment/name
+git switch -c codex/change-name
 ```
 
-实验确认后再合并回 `main`。
+只有个人、单设备且明确不需要审查的极小修改才直接使用 `main`。
